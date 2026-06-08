@@ -100,7 +100,11 @@ def render_detail(scored: ScoredListing) -> None:
         c4, c5, c6 = st.columns(3)
         c4.metric("Leistung", f"{car.power_ps} PS" if car.power_ps else "–")
         c5.metric("Kraftstoff", car.fuel or "–")
-        c6.metric("Getriebe", car.transmission or "–")
+        c6.metric(
+            "Bildqualität",
+            f"{car.image_score * 100:.0f} %" if car.image_score is not None else "–",
+            help="OpenCV-Bildanalyse (MVP-6): grober Qualitäts-/Plausibilitäts-Proxy.",
+        )
 
     if scored.valuation:
         val = scored.valuation
