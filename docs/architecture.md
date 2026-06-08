@@ -60,6 +60,20 @@ Gewichte/Schwellen/Schlagwörter sind über `ScoringConfig` (env-getrieben,
 bewertet. Reine, deterministische Logik; `ScoreResult.explain()` liefert eine
 menschenlesbare Aufschlüsselung für das Dashboard (MVP-5).
 
+### ui/ & app.py (MVP-5)
+Das Streamlit-Dashboard verbindet persistierte Inserate (MVP-3) mit den Scores
+(MVP-4):
+- **`ui/data.py`** – reine, testbare Datenschicht: `load_scored_listings()`
+  (Repo → Score), `filter_listings()` (Preis/Score/Titel) und `sort_listings()`
+  (`SORT_OPTIONS`). `ScoredListing` bündelt `CarDetail` + `ScoreResult`.
+- **`ui/dashboard.py`** – Streamlit-Komponenten: Inserate-Übersicht (Tabelle mit
+  Score-Fortschrittsbalken), Detailansicht mit Metadaten/Bild und – als Kern der
+  Nachvollziehbarkeit – ein Balkendiagramm + Tabelle der gewichteten
+  Faktor-Beiträge.
+- **`app.py`** – Entrypoint: Sidebar mit Scrape-Button, Filtern und Sortierung;
+  Hauptbereich mit Übersicht und Detailauswahl. Graceful Empty-State, wenn die DB
+  leer ist.
+
 ### Tests
 `tests/` läuft offline gegen gespeicherte HTML-Fixturen
 (`fixtures/willhaben_search.html`, `fixtures/willhaben_detail.html`) bzw. gegen
