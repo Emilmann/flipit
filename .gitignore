@@ -5,9 +5,10 @@ __pycache__/
 .eggs/
 build/
 dist/
+.pytest_cache/
 
 # Virtuelle Umgebungen
-.venv/
+.venv*/
 venv/
 env/
 

@@ -29,6 +29,35 @@ def _env_path(key: str, default: Path) -> Path:
     return path if path.is_absolute() else PROJECT_ROOT / path
 
 
+def _env_list(key: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    """Liest eine kommaseparierte Liste aus der Umgebung (leere Einträge entfallen)."""
+    raw = os.getenv(key)
+    if not raw:
+        return default
+    items = tuple(part.strip() for part in raw.split(",") if part.strip())
+    return items or default
+
+
+def _env_int(key: str, default: int) -> int:
+    raw = os.getenv(key)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _env_float(key: str, default: float) -> float:
+    raw = os.getenv(key)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
 @dataclass(frozen=True)
 class Settings:
     """Gebündelte Laufzeit-Konfiguration der Anwendung."""
@@ -36,6 +65,15 @@ class Settings:
     app_title: str
     data_dir: Path
     image_dir: Path
+
+    # --- Scraper (MVP-2) ---
+    search_models: tuple[str, ...]  # vordefinierte Fahrzeugmodelle (Such-Keywords)
+    price_min: int                  # Budget-Untergrenze in Euro
+    price_max: int                  # Budget-Obergrenze in Euro
+    willhaben_base_url: str         # Basis-URL der Gebrauchtwagen-Suche
+    request_delay: float            # Pause zwischen Requests (freundliches Rate-Limiting)
+    request_timeout: int            # HTTP-Timeout pro Request in Sekunden
+    user_agent: str                 # User-Agent-Header für Requests
 
 
 def load_settings() -> Settings:
@@ -46,6 +84,19 @@ def load_settings() -> Settings:
         app_title=os.getenv("APP_TITLE", "Flipit"),
         data_dir=data_dir,
         image_dir=image_dir,
+        search_models=_env_list("SEARCH_MODELS", ("Audi A3", "VW Golf", "BMW 3er")),
+        price_min=_env_int("PRICE_MIN", 6000),
+        price_max=_env_int("PRICE_MAX", 8000),
+        willhaben_base_url=os.getenv(
+            "WILLHABEN_BASE_URL",
+            "https://www.willhaben.at/iad/gebrauchtwagen/auto/gebrauchtwagenboerse",
+        ),
+        request_delay=_env_float("REQUEST_DELAY", 2.0),
+        request_timeout=_env_int("REQUEST_TIMEOUT", 20),
+        user_agent=os.getenv(
+            "USER_AGENT",
+            "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+        ),
     )
 
 
