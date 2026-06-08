@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtuelle Umgebungen
+.venv/
+venv/
+env/
+
+# Umgebungs-Secrets (nur .env.example wird eingecheckt)
+.env
+
+# Lokale Daten & Bildmaterial (zur Laufzeit erzeugt) – Ordner bleibt via .gitkeep erhalten
+data/*
+!data/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Claude Code lokale Settings (enthalten ggf. Tokens/Permissions)
+.claude/
