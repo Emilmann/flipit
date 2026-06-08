@@ -5,6 +5,14 @@ Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **MVP-4: Risiko-Scoring Engine** (Issue #4)
+  - `processing/scoring.py`: `RiskScorer` berechnet einen Gesamt-Score (0–100)
+    plus transparenten `FactorScore`-Breakdown aus vier Faktoren (Preis/Marge,
+    Kilometerstand, Alter, Beschreibungs-Signale).
+  - `ScoringConfig` (env-getrieben via `from_env()`): konfigurierbare Gewichte,
+    Schwellen und Schlagwort-Listen – nicht hardcoded.
+  - Fehlende Felder werden neutral bewertet; `ScoreResult.explain()` für die UI.
+  - 16 deterministische Unit-Tests (38 Tests gesamt grün).
 - **MVP-3: Datenextraktion & Persistenz** (Issue #3)
   - `processing/models.py`: `CarDetail`-Dataclass mit allen Metadaten (Preis, km,
     Baujahr, Leistung kW/PS, Kraftstoff, Getriebe, Hubraum, Beschreibung, Bilder).
