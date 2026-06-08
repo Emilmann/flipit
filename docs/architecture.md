@@ -11,13 +11,13 @@ src/flipit/
 ├── app.py        # Streamlit-Entrypoint (Dashboard)
 ├── core/         # Zentrale Konfiguration (env-getrieben) & gemeinsame Utilities
 ├── scraper/      # Abfrage & Parsing von willhaben.at        (MVP-2, Issue #2)
-├── processing/   # Datenextraktion, Persistenz, Bildanalyse  (MVP-3/4, Issues #3/#4)
+├── processing/   # Detail-Extraktion, Bild-Download, Persistenz (MVP-3, Issue #3); Bildanalyse (MVP-4)
 └── ui/           # Wiederverwendbare Streamlit-Komponenten    (MVP-5, Issue #5)
 ```
 
 ### core/config.py
 Lädt `.env` via `python-dotenv` und stellt eine `Settings`-Instanz (`settings`)
-bereit (`app_title`, `data_dir`, `image_dir` sowie die Scraper-Parameter
+bereit (`app_title`, `data_dir`, `image_dir`, `db_path` sowie die Scraper-Parameter
 `search_models`, `price_min`/`price_max`, `willhaben_base_url`, `request_delay`,
 `request_timeout`, `user_agent`). Alle Module sollen Konfiguration von hier
 beziehen — keine Hardcoded-Werte.
@@ -34,9 +34,26 @@ beziehen — keine Hardcoded-Werte.
   die konfigurierten Modelle mit freundlichem Rate-Limiting (`request_delay`) und
   ID-Deduplizierung.
 
+### processing/ (MVP-3)
+- **`models.py`** – `CarDetail`-Dataclass: vollständige Metadaten (Preis, km,
+  Baujahr/-monat, Leistung in kW + abgeleitete PS, Kraftstoff, Getriebe, Hubraum,
+  Beschreibung, Bild-URLs/-Pfade, Quell-URL).
+- **`extract.py`** – `parse_detail()` liest `props.pageProps.advertDetails` aus dem
+  `__NEXT_DATA__`-JSON der Detailseite; bereinigt die HTML-Beschreibung via
+  BeautifulSoup. Reine, netzwerkfreie Funktion.
+- **`images.py`** – `download_images()` lädt die Bilder nach
+  `<image_dir>/<id>/<n>.jpg`, idempotent (vorhandene Dateien werden übersprungen).
+- **`storage.py`** – `ListingRepository` persistiert `CarDetail` in **SQLite**
+  (stdlib `sqlite3`, keine neue Abhängigkeit). Upsert über die Inserat-`id`;
+  Spalten ohne Typ-Affinität bewahren int/str/None beim Roundtrip. Wiederladbar
+  nach Neustart, abfragbar für das Dashboard (MVP-5).
+- **`pipeline.py`** – `process_detail_html()` (offline testbar) und `run()`
+  (vollständiger Lauf: suchen → Detail laden → extrahieren → Bilder → persistieren).
+
 ### Tests
-`tests/` läuft offline gegen eine gespeicherte HTML-Fixture
-(`tests/fixtures/willhaben_search.html`) – kein Live-Call. Ausführen:
+`tests/` läuft offline gegen gespeicherte HTML-Fixturen
+(`fixtures/willhaben_search.html`, `fixtures/willhaben_detail.html`) bzw. gegen
+gestubbte Sessions und temporäre SQLite-DBs – kein Live-Call. Ausführen:
 `pip install -r requirements-dev.txt && pytest`.
 
 ## Container-Aufbau (MVP-1)
