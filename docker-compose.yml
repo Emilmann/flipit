@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    container_name: flipit-web
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      # Code-Bind-Mount für schnelle lokale Iteration (Streamlit reloadet bei Änderungen)
+      - ./src:/app/src
+      # Persistenter Datenordner – vorbereitet für MVP-3 (Inserate + Bilder)
+      - ./data:/app/data
+    restart: unless-stopped
