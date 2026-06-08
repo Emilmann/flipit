@@ -5,6 +5,18 @@ Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **MVP-3: Datenextraktion & Persistenz** (Issue #3)
+  - `processing/models.py`: `CarDetail`-Dataclass mit allen Metadaten (Preis, km,
+    Baujahr, Leistung kW/PS, Kraftstoff, Getriebe, Hubraum, Beschreibung, Bilder).
+  - `processing/extract.py`: `parse_detail()` extrahiert die Detailseite aus dem
+    `__NEXT_DATA__`-JSON; HTML-Beschreibung wird via BeautifulSoup bereinigt.
+  - `processing/images.py`: `download_images()` lädt Bilder lokal (Pfad via `.env`),
+    idempotent.
+  - `processing/storage.py`: `ListingRepository` persistiert in **SQLite**
+    (Upsert über `id`, wiederladbar nach Neustart).
+  - `processing/pipeline.py`: `process_detail_html()` + `run()` (suchen → Detail →
+    extrahieren → Bilder → persistieren).
+  - Neue Config `DB_PATH`; Offline-Tests inkl. Detail-Fixture (23 Tests gesamt).
 - **MVP-2: Willhaben Scraper – Basis-Logik** (Issue #2)
   - `scraper/willhaben.py`: `WillhabenScraper` mit Such-URL-Aufbau, HTTP-Abruf
     (requests, Timeout, freundliche Header, Fehlerbehandlung) und Parsing des

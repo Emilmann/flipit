@@ -65,6 +65,7 @@ class Settings:
     app_title: str
     data_dir: Path
     image_dir: Path
+    db_path: Path                   # SQLite-Datei für persistierte Inserate (MVP-3)
 
     # --- Scraper (MVP-2) ---
     search_models: tuple[str, ...]  # vordefinierte Fahrzeugmodelle (Such-Keywords)
@@ -80,10 +81,12 @@ def load_settings() -> Settings:
     """Baut die Settings aus Umgebungsvariablen (mit Defaults)."""
     data_dir = _env_path("DATA_DIR", PROJECT_ROOT / "data")
     image_dir = _env_path("IMAGE_DIR", data_dir / "images")
+    db_path = _env_path("DB_PATH", data_dir / "flipit.db")
     return Settings(
         app_title=os.getenv("APP_TITLE", "Flipit"),
         data_dir=data_dir,
         image_dir=image_dir,
+        db_path=db_path,
         search_models=_env_list("SEARCH_MODELS", ("Audi A3", "VW Golf", "BMW 3er")),
         price_min=_env_int("PRICE_MIN", 6000),
         price_max=_env_int("PRICE_MAX", 8000),
