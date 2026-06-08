@@ -5,6 +5,16 @@ Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **MVP-5: Streamlit Dashboard – Inserate & Score-Visualisierung** (Issue #5)
+  - `ui/data.py`: testbare Datenschicht (`load_scored_listings`, `filter_listings`,
+    `sort_listings`) – verbindet Persistenz (MVP-3) mit Scoring (MVP-4).
+  - `ui/dashboard.py`: Inserate-Übersicht (Tabelle mit Score-Balken),
+    Detailansicht mit Metadaten/Bild und nachvollziehbarer Score-Zusammensetzung
+    (Balkendiagramm + Breakdown-Tabelle der gewichteten Faktor-Beiträge).
+  - `app.py`: ausgebautes Dashboard mit Sidebar (Scrape-Button, Filter,
+    Sortierung) und Empty-State; löst „Hello Flipit" ab.
+  - Modernisiert `use_container_width` → `width="stretch"`; 7 neue Tests
+    (45 gesamt grün); verifiziert via Streamlit `AppTest` und im Docker-Container.
 - **MVP-4: Risiko-Scoring Engine** (Issue #4)
   - `processing/scoring.py`: `RiskScorer` berechnet einen Gesamt-Score (0–100)
     plus transparenten `FactorScore`-Breakdown aus vier Faktoren (Preis/Marge,
