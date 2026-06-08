@@ -17,6 +17,7 @@ import requests
 
 from flipit.core.config import Settings, settings
 from flipit.processing.extract import parse_detail
+from flipit.processing.image_analysis import analyze_paths
 from flipit.processing.images import download_images
 from flipit.processing.models import CarDetail
 from flipit.processing.storage import ListingRepository
@@ -42,6 +43,10 @@ def process_detail_html(
     car = parse_detail(html, source_url=source_url)
     if download and car.image_urls:
         download_images(car, config=config, session=session)
+        if car.image_paths:
+            analysis = analyze_paths(car.image_paths)
+            if analysis is not None:
+                car.image_score = analysis.image_score
     repo.save(car)
     return car
 

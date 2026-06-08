@@ -38,6 +38,7 @@ class CarDetail:
     is_private: bool | None = None
     image_urls: list[str] = field(default_factory=list)   # Quell-URLs der Bilder
     image_paths: list[str] = field(default_factory=list)  # lokale Pfade nach Download
+    image_score: float | None = None  # Bildqualitäts-/Auffälligkeits-Score 0–1 (MVP-6)
     scraped_at: str | None = None    # ISO-Zeitstempel der Extraktion
 
     @property

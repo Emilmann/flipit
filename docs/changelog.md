@@ -5,6 +5,15 @@ Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **MVP-6: Bildanalyse via OpenCV** (Issue #11)
+  - `processing/image_analysis.py`: lokale OpenCV-Analyse (Schärfe, Helligkeit,
+    Kontrast, Kantendichte) → aggregierter Bild-Score 0–1.
+  - Pipeline berechnet den Score nach dem Bild-Download; persistiert in
+    `CarDetail.image_score` (SQLite mit automatischer Spalten-Migration).
+  - Neuer `images`-Faktor im `RiskScorer` (konfigurierbares Gewicht), Anzeige der
+    Bildqualität im Dashboard-Detail.
+  - `opencv-python-headless` + `numpy` als Abhängigkeiten; 11 neue Tests
+    (69 gesamt grün, im Docker-Container verifiziert).
 - **MVP-7: Marktwert-/Margen-Schätzung** (Issue #12)
   - `processing/valuation.py`: `MarketValuator` schätzt den Marktwert aus
     vergleichbaren Inseraten (Median, km-/Baujahr-Korridor) → `ValuationResult`

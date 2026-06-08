@@ -71,6 +71,18 @@ Vergleichswerten (`min_sample_size`) → `None` (neutrale Behandlung). Konfiguri
 über `ValuationConfig` (env-getrieben). Der geschätzte Wert speist den
 Margen-Faktor des `RiskScorer`.
 
+### processing/image_analysis.py (MVP-6)
+OpenCV-basierte, lokale Bildanalyse der heruntergeladenen Inseratsbilder.
+`analyze_paths(paths)` berechnet je Bild Kennzahlen (Schärfe via Laplace-Varianz,
+Helligkeit, Kontrast, Kantendichte) und aggregiert zu einem Bild-Score in [0, 1]
+(`ImageAnalysisResult`). Der Score wird in der Pipeline berechnet, in
+`CarDetail.image_score` persistiert und speist den `images`-Faktor des
+`RiskScorer`. Konfigurierbar über `ImageAnalysisConfig` (env-getrieben).
+**Abgrenzung:** bewusst ein grober Qualitäts-/Plausibilitäts-Proxy (z. B. können
+unscharfe Fotos Mängel verschleiern), keine echte Schadenserkennung. Nutzt
+`opencv-python-headless` (kein GUI im Container). Die SQLite-Persistenz ergänzt
+fehlende Spalten automatisch (leichte Migration in `ListingRepository`).
+
 ### ui/ & app.py (MVP-5)
 Das Streamlit-Dashboard verbindet persistierte Inserate (MVP-3) mit den Scores
 (MVP-4):

@@ -39,7 +39,7 @@ def test_total_within_bounds() -> None:
 def test_breakdown_has_all_factors() -> None:
     result = RiskScorer(CONFIG).score(make_car())
     names = {f.name for f in result.factors}
-    assert names == {"margin", "price", "mileage", "age", "description"}
+    assert names == {"margin", "price", "mileage", "age", "description", "images"}
 
 
 def test_contributions_sum_to_total() -> None:
@@ -107,10 +107,30 @@ def test_weights_are_configurable() -> None:
     # Nur Preis zählt → Score = Preis-Normalisierung × 100.
     cfg = replace(
         CONFIG, weight_margin=0.0, weight_price=1.0, weight_mileage=0.0,
-        weight_age=0.0, weight_description=0.0,
+        weight_age=0.0, weight_description=0.0, weight_images=0.0,
     )
     result = RiskScorer(cfg).score(make_car(price=6000))
     assert result.total == pytest.approx(100.0)
+
+
+def test_image_score_factor() -> None:
+    scorer = RiskScorer(CONFIG)
+    good = next(
+        f for f in scorer.score(make_car(image_score=0.9)).factors if f.name == "images"
+    )
+    bad = next(
+        f for f in scorer.score(make_car(image_score=0.1)).factors if f.name == "images"
+    )
+    assert good.normalized == pytest.approx(0.9)
+    assert bad.normalized == pytest.approx(0.1)
+
+
+def test_image_score_neutral_when_missing() -> None:
+    img = next(
+        f for f in RiskScorer(CONFIG).score(make_car()).factors if f.name == "images"
+    )
+    assert img.raw_value is None
+    assert img.normalized == pytest.approx(0.5)
 
 
 def test_margin_factor_rewards_below_market_price() -> None:
