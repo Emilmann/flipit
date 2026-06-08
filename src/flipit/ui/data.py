@@ -12,17 +12,20 @@ from dataclasses import dataclass
 from flipit.processing import (
     CarDetail,
     ListingRepository,
+    MarketValuator,
     RiskScorer,
     ScoreResult,
+    ValuationResult,
 )
 
 
 @dataclass(frozen=True)
 class ScoredListing:
-    """Ein Inserat zusammen mit seinem berechneten Score."""
+    """Ein Inserat mit berechnetem Score und (falls vorhanden) Marktwert-Schätzung."""
 
     car: CarDetail
     score: ScoreResult
+    valuation: ValuationResult | None = None
 
     @property
     def total(self) -> float:
@@ -32,10 +35,29 @@ class ScoredListing:
 def load_scored_listings(
     repo: ListingRepository,
     scorer: RiskScorer | None = None,
+    valuator: MarketValuator | None = None,
 ) -> list[ScoredListing]:
-    """Lädt alle persistierten Inserate und berechnet je einen Score."""
+    """Lädt alle persistierten Inserate, schätzt Marktwerte und berechnet Scores.
+
+    Der Marktwert (MVP-7) wird aus dem gesamten geladenen Korpus geschätzt und
+    speist den Margen-Faktor des Scorers.
+    """
     scorer = scorer or RiskScorer()
-    return [ScoredListing(car=car, score=scorer.score(car)) for car in repo.all()]
+    cars = repo.all()
+    valuator = valuator or MarketValuator(cars)
+
+    items: list[ScoredListing] = []
+    for car in cars:
+        valuation = valuator.estimate(car)
+        market_value = valuation.estimated_value if valuation else None
+        items.append(
+            ScoredListing(
+                car=car,
+                score=scorer.score(car, market_value=market_value),
+                valuation=valuation,
+            )
+        )
+    return items
 
 
 def filter_listings(

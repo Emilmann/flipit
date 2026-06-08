@@ -5,6 +5,16 @@ Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **MVP-7: Marktwert-/Margen-Schätzung** (Issue #12)
+  - `processing/valuation.py`: `MarketValuator` schätzt den Marktwert aus
+    vergleichbaren Inseraten (Median, km-/Baujahr-Korridor) → `ValuationResult`
+    (geschätzter Wert, Stichprobe, Marge absolut & prozentual).
+  - Neuer **Margen-Faktor** im `RiskScorer` (`score(car, market_value=...)`),
+    Default-Gewichte rebalanciert; `ScoringConfig` um Margen-Schwellen erweitert.
+  - Dashboard zeigt Marktwert + Marge in Übersicht und Detail; Faktor im
+    Score-Breakdown sichtbar.
+  - Konfigurierbar via `.env` (`VALUATION_*`, `SCORE_WEIGHT_MARGIN`,
+    `SCORE_MARGIN_*`); deterministische Offline-Tests (57 Tests gesamt grün).
 - **MVP-5: Streamlit Dashboard – Inserate & Score-Visualisierung** (Issue #5)
   - `ui/data.py`: testbare Datenschicht (`load_scored_listings`, `filter_listings`,
     `sort_listings`) – verbindet Persistenz (MVP-3) mit Scoring (MVP-4).
