@@ -55,6 +55,11 @@ class ListingRepository:
         )
         with self._connect() as conn:
             conn.execute(f"CREATE TABLE IF NOT EXISTS listings ({columns})")
+            # Leichte Migration: fehlende Spalten (neue CarDetail-Felder) ergänzen.
+            existing = {row["name"] for row in conn.execute("PRAGMA table_info(listings)")}
+            for name in _COLUMNS:
+                if name not in existing:
+                    conn.execute(f"ALTER TABLE listings ADD COLUMN {name}")
 
     def save(self, car: CarDetail) -> None:
         """Fügt ein Inserat ein oder aktualisiert es (Upsert über `id`)."""
