@@ -11,15 +11,23 @@ from flipit.processing.scoring import (
     ScoringConfig,
 )
 from flipit.processing.storage import ListingRepository
+from flipit.processing.valuation import (
+    MarketValuator,
+    ValuationConfig,
+    ValuationResult,
+)
 
 __all__ = [
     "CarDetail",
     "ExtractionError",
     "FactorScore",
     "ListingRepository",
+    "MarketValuator",
     "RiskScorer",
     "ScoreResult",
     "ScoringConfig",
+    "ValuationConfig",
+    "ValuationResult",
     "download_images",
     "parse_detail",
     "process_detail_html",

@@ -64,14 +64,19 @@ class ScoringConfig:
     """Konfigurierbares Gewichtungs- und Schwellen-Schema."""
 
     # Gewichte der Faktoren (werden intern auf Summe 1 normalisiert)
-    weight_price: float = 0.35
-    weight_mileage: float = 0.30
-    weight_age: float = 0.20
+    weight_margin: float = 0.30       # Marge zum geschätzten Marktwert (MVP-7)
+    weight_price: float = 0.15        # Budget-Headroom (sekundär)
+    weight_mileage: float = 0.25
+    weight_age: float = 0.15
     weight_description: float = 0.15
 
-    # Budget-Range (Margen-Logik): günstiger innerhalb des Budgets = mehr Marge
+    # Budget-Range (Budget-Headroom): günstiger innerhalb des Budgets = besser
     price_min: int = 6000
     price_max: int = 8000
+
+    # Marge zum Marktwert (margin_pct): best = Score 1.0, worst = Score 0.0
+    margin_best_pct: float = 0.20     # 20 % unter Marktwert = bestes Geschäft
+    margin_worst_pct: float = -0.15   # 15 % über Marktwert = schlechtestes
 
     # Kilometerstand: best = Score 1.0, worst = Score 0.0
     mileage_best: int = 50_000
@@ -93,12 +98,15 @@ class ScoringConfig:
     def from_env(cls) -> "ScoringConfig":
         """Lädt die Konfiguration aus Umgebungsvariablen (mit Defaults)."""
         return cls(
-            weight_price=_env_float("SCORE_WEIGHT_PRICE", 0.35),
-            weight_mileage=_env_float("SCORE_WEIGHT_MILEAGE", 0.30),
-            weight_age=_env_float("SCORE_WEIGHT_AGE", 0.20),
+            weight_margin=_env_float("SCORE_WEIGHT_MARGIN", 0.30),
+            weight_price=_env_float("SCORE_WEIGHT_PRICE", 0.15),
+            weight_mileage=_env_float("SCORE_WEIGHT_MILEAGE", 0.25),
+            weight_age=_env_float("SCORE_WEIGHT_AGE", 0.15),
             weight_description=_env_float("SCORE_WEIGHT_DESCRIPTION", 0.15),
             price_min=_env_int("PRICE_MIN", 6000),
             price_max=_env_int("PRICE_MAX", 8000),
+            margin_best_pct=_env_float("SCORE_MARGIN_BEST_PCT", 0.20),
+            margin_worst_pct=_env_float("SCORE_MARGIN_WORST_PCT", -0.15),
             mileage_best=_env_int("SCORE_MILEAGE_BEST", 50_000),
             mileage_worst=_env_int("SCORE_MILEAGE_WORST", 250_000),
             age_best=_env_int("SCORE_AGE_BEST", 0),
@@ -112,6 +120,7 @@ class ScoringConfig:
     @property
     def weights(self) -> dict[str, float]:
         return {
+            "margin": self.weight_margin,
             "price": self.weight_price,
             "mileage": self.weight_mileage,
             "age": self.weight_age,
@@ -167,10 +176,22 @@ class RiskScorer:
     def __init__(self, config: ScoringConfig | None = None) -> None:
         self.config = config or ScoringConfig()
 
+    def _score_margin(
+        self, car: CarDetail, market_value: float | None
+    ) -> tuple[object, float]:
+        # Marge zum geschätzten Marktwert; ohne Marktwert/Preis neutral.
+        if market_value is None or market_value <= 0 or car.price is None:
+            return None, _NEUTRAL
+        margin_pct = (market_value - car.price) / market_value
+        normalized = _linear(
+            margin_pct, self.config.margin_best_pct, self.config.margin_worst_pct
+        )
+        return f"{margin_pct * 100:+.0f}%", normalized
+
     def _score_price(self, car: CarDetail) -> tuple[object, float]:
         if car.price is None:
             return None, _NEUTRAL
-        # Günstiger innerhalb des Budgets = mehr Marge = besser.
+        # Budget-Headroom: günstiger innerhalb des Budgets = besser.
         return car.price, _linear(car.price, self.config.price_min, self.config.price_max)
 
     def _score_mileage(self, car: CarDetail) -> tuple[object, float]:
@@ -195,12 +216,17 @@ class RiskScorer:
         score = _NEUTRAL + (positives - negatives) * self.config.keyword_step
         return f"+{positives}/-{negatives}", _clamp(score)
 
-    def score(self, car: CarDetail) -> ScoreResult:
-        """Berechnet Gesamt-Score und Breakdown für ein Inserat."""
+    def score(self, car: CarDetail, market_value: float | None = None) -> ScoreResult:
+        """Berechnet Gesamt-Score und Breakdown für ein Inserat.
+
+        `market_value` (geschätzter Marktwert, MVP-7) speist den Margen-Faktor;
+        fehlt er, wird die Marge neutral bewertet.
+        """
         raw_weights = self.config.weights
         total_weight = sum(raw_weights.values()) or 1.0
 
         scorers = {
+            "margin": lambda c: self._score_margin(c, market_value),
             "price": self._score_price,
             "mileage": self._score_mileage,
             "age": self._score_age,

@@ -58,7 +58,18 @@ auf [0, 1] normalisiert (1 = beste Bewertung), gewichtet und aufsummiert.
 Gewichte/Schwellen/Schlagwörter sind über `ScoringConfig` (env-getrieben,
 `ScoringConfig.from_env()`) konfigurierbar. Fehlende Felder werden neutral (0.5)
 bewertet. Reine, deterministische Logik; `ScoreResult.explain()` liefert eine
-menschenlesbare Aufschlüsselung für das Dashboard (MVP-5).
+menschenlesbare Aufschlüsselung für das Dashboard (MVP-5). Seit MVP-7 enthält der
+Breakdown zusätzlich einen **Margen-Faktor** (`score(car, market_value=...)`):
+ohne Marktwert wird er neutral bewertet.
+
+### processing/valuation.py (MVP-7)
+`MarketValuator.estimate(car)` schätzt den Marktwert aus vergleichbaren Inseraten
+desselben Modells (gleiche Marke+Modell, innerhalb km-/Baujahr-Toleranz) als
+**Median** der Vergleichspreise und liefert ein `ValuationResult`
+(geschätzter Wert, Stichprobengröße, absolute & prozentuale Marge). Bei zu wenigen
+Vergleichswerten (`min_sample_size`) → `None` (neutrale Behandlung). Konfigurierbar
+über `ValuationConfig` (env-getrieben). Der geschätzte Wert speist den
+Margen-Faktor des `RiskScorer`.
 
 ### ui/ & app.py (MVP-5)
 Das Streamlit-Dashboard verbindet persistierte Inserate (MVP-3) mit den Scores

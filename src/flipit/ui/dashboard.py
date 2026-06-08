@@ -18,6 +18,13 @@ def _fmt_price(value: int | None) -> str:
     return f"€ {value:,.0f}".replace(",", ".") if value is not None else "–"
 
 
+def _fmt_margin(item: ScoredListing) -> str:
+    if not item.valuation or item.valuation.margin is None:
+        return "–"
+    sign = "+" if item.valuation.margin >= 0 else "−"
+    return f"{sign}{_fmt_price(abs(item.valuation.margin))}"
+
+
 def render_overview(items: list[ScoredListing]) -> None:
     """Tabellarische Übersicht der Inserate mit Kernmetadaten + Score."""
     rows = [
@@ -25,9 +32,10 @@ def render_overview(items: list[ScoredListing]) -> None:
             "Score": round(i.total, 1),
             "Titel": i.car.title,
             "Preis": _fmt_price(i.car.price),
+            "Marktwert": _fmt_price(i.valuation.estimated_value) if i.valuation else "–",
+            "Marge": _fmt_margin(i),
             "km": i.car.mileage,
             "Baujahr": i.car.year,
-            "Leistung": f"{i.car.power_ps} PS" if i.car.power_ps else "–",
             "Ort": i.car.location or "–",
         }
         for i in items
@@ -93,6 +101,25 @@ def render_detail(scored: ScoredListing) -> None:
         c4.metric("Leistung", f"{car.power_ps} PS" if car.power_ps else "–")
         c5.metric("Kraftstoff", car.fuel or "–")
         c6.metric("Getriebe", car.transmission or "–")
+
+    if scored.valuation:
+        val = scored.valuation
+        st.markdown("#### Marktwert-Schätzung")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Geschätzter Marktwert", _fmt_price(val.estimated_value))
+        if val.margin is not None:
+            m2.metric(
+                "Marge",
+                _fmt_margin(scored),
+                delta=f"{val.margin_pct * 100:+.0f}%" if val.margin_pct is not None else None,
+            )
+        m3.metric("Vergleichsinserate", val.sample_size)
+        st.caption(
+            "Marktwert = Median vergleichbarer Inserate (gleiches Modell, ähnlicher "
+            "km-Stand & Baujahr). Marge = Marktwert − Kaufpreis."
+        )
+    else:
+        st.info("Zu wenige Vergleichsinserate für eine Marktwert-Schätzung.")
 
     st.markdown("#### Score-Zusammensetzung")
     st.caption("So setzt sich der Gesamt-Score aus den gewichteten Faktoren zusammen:")

@@ -39,7 +39,7 @@ def test_total_within_bounds() -> None:
 def test_breakdown_has_all_factors() -> None:
     result = RiskScorer(CONFIG).score(make_car())
     names = {f.name for f in result.factors}
-    assert names == {"price", "mileage", "age", "description"}
+    assert names == {"margin", "price", "mileage", "age", "description"}
 
 
 def test_contributions_sum_to_total() -> None:
@@ -106,10 +106,45 @@ def test_missing_fields_are_neutral() -> None:
 def test_weights_are_configurable() -> None:
     # Nur Preis zählt → Score = Preis-Normalisierung × 100.
     cfg = replace(
-        CONFIG, weight_price=1.0, weight_mileage=0.0, weight_age=0.0, weight_description=0.0
+        CONFIG, weight_margin=0.0, weight_price=1.0, weight_mileage=0.0,
+        weight_age=0.0, weight_description=0.0,
     )
     result = RiskScorer(cfg).score(make_car(price=6000))
     assert result.total == pytest.approx(100.0)
+
+
+def test_margin_factor_rewards_below_market_price() -> None:
+    scorer = RiskScorer(CONFIG)
+    # Preis 6000, Marktwert 8000 → ~25 % unter Markt → hoher Margen-Score.
+    good = next(
+        f for f in scorer.score(make_car(price=6000), market_value=8000).factors
+        if f.name == "margin"
+    )
+    # Preis 8000, Marktwert 7000 → über Markt → niedriger Margen-Score.
+    bad = next(
+        f for f in scorer.score(make_car(price=8000), market_value=7000).factors
+        if f.name == "margin"
+    )
+    assert good.normalized > 0.9
+    assert bad.normalized < 0.5
+    assert good.normalized > bad.normalized
+
+
+def test_margin_neutral_without_market_value() -> None:
+    margin = next(
+        f for f in RiskScorer(CONFIG).score(make_car(price=7000)).factors
+        if f.name == "margin"
+    )
+    assert margin.raw_value is None
+    assert margin.normalized == pytest.approx(0.5)
+
+
+def test_market_value_raises_total_for_good_deal() -> None:
+    scorer = RiskScorer(CONFIG)
+    car = make_car(price=6000)
+    without = scorer.score(car).total
+    with_deal = scorer.score(car, market_value=9000).total  # deutlich unter Markt
+    assert with_deal > without
 
 
 def test_from_env_reads_weights(monkeypatch: pytest.MonkeyPatch) -> None:

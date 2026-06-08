@@ -79,3 +79,16 @@ def test_sort_options_are_valid(repo: ListingRepository) -> None:
     items = load_scored_listings(repo, SCORER)
     for key in SORT_OPTIONS:
         assert len(sort_listings(items, key)) == len(items)
+
+
+def test_valuation_is_attached_when_comparables_exist(tmp_path: Path) -> None:
+    cfg = replace(settings, db_path=tmp_path / "val.db")
+    repo = ListingRepository(config=cfg)
+    # Vier vergleichbare Audi A3 → Marktwert schätzbar.
+    for i, price in enumerate((6000, 7000, 8000, 9000)):
+        repo.save(CarDetail(id=f"a{i}", url=f"u/{i}", title="Audi A3", make="Audi",
+                            model="A3", price=price, mileage=150_000, year=2016))
+    items = load_scored_listings(repo, SCORER)
+    assert all(i.valuation is not None for i in items)
+    # Margen-Faktor ist im Breakdown enthalten.
+    assert any(f.name == "margin" for f in items[0].score.factors)
