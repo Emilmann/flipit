@@ -50,6 +50,16 @@ beziehen — keine Hardcoded-Werte.
 - **`pipeline.py`** – `process_detail_html()` (offline testbar) und `run()`
   (vollständiger Lauf: suchen → Detail laden → extrahieren → Bilder → persistieren).
 
+### processing/scoring.py (MVP-4)
+Risiko-/Margen-Engine: `RiskScorer.score(car)` liefert ein `ScoreResult`
+(Gesamt-Score 0–100 + `FactorScore`-Breakdown). Vier Faktoren – Preis (Marge zum
+Budget), Kilometerstand, Alter und Beschreibungs-Signale (Schlagwörter) – werden
+auf [0, 1] normalisiert (1 = beste Bewertung), gewichtet und aufsummiert.
+Gewichte/Schwellen/Schlagwörter sind über `ScoringConfig` (env-getrieben,
+`ScoringConfig.from_env()`) konfigurierbar. Fehlende Felder werden neutral (0.5)
+bewertet. Reine, deterministische Logik; `ScoreResult.explain()` liefert eine
+menschenlesbare Aufschlüsselung für das Dashboard (MVP-5).
+
 ### Tests
 `tests/` läuft offline gegen gespeicherte HTML-Fixturen
 (`fixtures/willhaben_search.html`, `fixtures/willhaben_detail.html`) bzw. gegen
