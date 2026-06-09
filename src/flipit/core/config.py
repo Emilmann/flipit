@@ -110,8 +110,8 @@ def load_settings() -> Settings:
         ),
         google_api_key=os.getenv("GOOGLE_API_KEY", ""),
         google_cse_id=os.getenv("GOOGLE_CSE_ID", ""),
-        supabase_url=os.getenv("SUPABASE_URL", ""),
-        supabase_key=os.getenv("SUPABASE_KEY", ""),
+        supabase_url=os.getenv("SUPABASE_URL", "").rstrip("/"),
+        supabase_key=os.getenv("SUPABASE_KEY", "").strip(),
     )
 
 
