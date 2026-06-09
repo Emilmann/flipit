@@ -85,8 +85,9 @@ def render_detail(scored: ScoredListing) -> None:
 
     col_img, col_meta = st.columns([1, 2])
     with col_img:
-        first_image = car.image_paths[0] if car.image_paths else None
-        if first_image and Path(first_image).exists():
+        local = car.image_paths[0] if car.image_paths and Path(car.image_paths[0]).exists() else None
+        first_image = local or (car.image_urls[0] if car.image_urls else None)
+        if first_image:
             st.image(first_image, width="stretch")
         else:
             st.info("Kein Bild verfügbar.")
