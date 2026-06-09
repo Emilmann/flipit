@@ -7,6 +7,12 @@ nachvollziehbare Score-Zusammensetzung.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# Streamlit Cloud setzt kein PYTHONPATH=/app/src (anders als der Dockerfile)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import streamlit as st
 
 from flipit import __version__
