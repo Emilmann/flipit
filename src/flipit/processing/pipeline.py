@@ -47,6 +47,16 @@ def process_detail_html(
             analysis = analyze_paths(car.image_paths)
             if analysis is not None:
                 car.image_score = analysis.image_score
+    if config.google_api_key:
+        from flipit.processing.model_risk import ModelRiskLookup
+        lookup = ModelRiskLookup(
+            str(config.db_path),
+            config.google_api_key,
+            config.google_cse_id,
+        )
+        result = lookup.lookup(car)
+        car.model_risk_score = result.score
+        car.model_risk_notes = result.notes
     repo.save(car)
     return car
 

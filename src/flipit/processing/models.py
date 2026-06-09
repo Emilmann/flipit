@@ -39,6 +39,8 @@ class CarDetail:
     image_urls: list[str] = field(default_factory=list)   # Quell-URLs der Bilder
     image_paths: list[str] = field(default_factory=list)  # lokale Pfade nach Download
     image_score: float | None = None  # Bildqualitäts-/Auffälligkeits-Score 0–1 (MVP-6)
+    model_risk_score: float | None = None   # Modellspezifisches Risiko 0–1 (MVP-8)
+    model_risk_notes: str | None = None     # Begründung des Modell-Risikos (MVP-8)
     scraped_at: str | None = None    # ISO-Zeitstempel der Extraktion
 
     @property

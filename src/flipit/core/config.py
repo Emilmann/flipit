@@ -76,6 +76,10 @@ class Settings:
     request_timeout: int            # HTTP-Timeout pro Request in Sekunden
     user_agent: str                 # User-Agent-Header für Requests
 
+    # --- Modell-Risiko (MVP-8 / MVP-9) ---
+    google_api_key: str             # Google API Key: Gemini LLM + Custom Search (MVP-8/9)
+    google_cse_id: str              # Google Custom Search Engine ID (MVP-9)
+
 
 def load_settings() -> Settings:
     """Baut die Settings aus Umgebungsvariablen (mit Defaults)."""
@@ -100,6 +104,8 @@ def load_settings() -> Settings:
             "USER_AGENT",
             "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
         ),
+        google_api_key=os.getenv("GOOGLE_API_KEY", ""),
+        google_cse_id=os.getenv("GOOGLE_CSE_ID", ""),
     )
 
 
