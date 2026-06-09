@@ -42,7 +42,7 @@ def render_overview(items: list[ScoredListing]) -> None:
     ]
     st.dataframe(
         pd.DataFrame(rows),
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
         column_config={
             "Score": st.column_config.ProgressColumn(
@@ -60,7 +60,7 @@ def render_weight_chart(scored: ScoredListing) -> None:
             "Beitrag": [round(f.contribution * 100, 1) for f in scored.score.factors],
         }
     ).set_index("Faktor")
-    st.bar_chart(df, horizontal=True)
+    st.bar_chart(df, use_container_width=True, horizontal=True)
 
 
 def render_breakdown_table(scored: ScoredListing) -> None:
@@ -75,7 +75,7 @@ def render_breakdown_table(scored: ScoredListing) -> None:
         }
         for f in scored.score.factors
     ]
-    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 
 def render_detail(scored: ScoredListing) -> None:
@@ -83,34 +83,34 @@ def render_detail(scored: ScoredListing) -> None:
     car = scored.car
     st.subheader(car.title or f"Inserat {car.id}")
 
-    col_img, col_meta = st.columns([1, 2])
-    with col_img:
-        local = car.image_paths[0] if car.image_paths and Path(car.image_paths[0]).exists() else None
-        first_image = local or (car.image_urls[0] if car.image_urls else None)
-        if first_image:
-            st.image(first_image, width="stretch")
-        else:
-            st.info("Kein Bild verfügbar.")
+    # Bild — volle Breite, kein Nebeneinander-Layout
+    local = car.image_paths[0] if car.image_paths and Path(car.image_paths[0]).exists() else None
+    first_image = local or (car.image_urls[0] if car.image_urls else None)
+    if first_image:
+        st.image(first_image, use_container_width=True)
+    else:
+        st.info("Kein Bild verfügbar.")
 
-    with col_meta:
-        st.metric("Gesamt-Score", f"{scored.total:.1f} / 100")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Preis", _fmt_price(car.price))
-        c2.metric("Kilometerstand", f"{car.mileage:,.0f} km".replace(",", ".") if car.mileage else "–")
-        c3.metric("Baujahr", car.year or "–")
-        c4, c5, c6 = st.columns(3)
-        c4.metric("Leistung", f"{car.power_ps} PS" if car.power_ps else "–")
-        c5.metric("Kraftstoff", car.fuel or "–")
-        c6.metric(
-            "Bildqualität",
-            f"{car.image_score * 100:.0f} %" if car.image_score is not None else "–",
-            help="OpenCV-Bildanalyse (MVP-6): grober Qualitäts-/Plausibilitäts-Proxy.",
-        )
+    # Score + Kernmetriken in 2er-Spalten (auf Mobile lesbar)
+    st.metric("Gesamt-Score", f"{scored.total:.1f} / 100")
+    c1, c2 = st.columns(2)
+    c1.metric("Preis", _fmt_price(car.price))
+    c2.metric("Kilometerstand", f"{car.mileage:,.0f} km".replace(",", ".") if car.mileage else "–")
+    c3, c4 = st.columns(2)
+    c3.metric("Baujahr", car.year or "–")
+    c4.metric("Leistung", f"{car.power_ps} PS" if car.power_ps else "–")
+    c5, c6 = st.columns(2)
+    c5.metric("Kraftstoff", car.fuel or "–")
+    c6.metric(
+        "Bildqualität",
+        f"{car.image_score * 100:.0f} %" if car.image_score is not None else "–",
+        help="OpenCV-Bildanalyse (MVP-6): grober Qualitäts-/Plausibilitäts-Proxy.",
+    )
 
     if scored.valuation:
         val = scored.valuation
         st.markdown("#### Marktwert-Schätzung")
-        m1, m2, m3 = st.columns(3)
+        m1, m2 = st.columns(2)
         m1.metric("Geschätzter Marktwert", _fmt_price(val.estimated_value))
         if val.margin is not None:
             m2.metric(
@@ -118,7 +118,7 @@ def render_detail(scored: ScoredListing) -> None:
                 _fmt_margin(scored),
                 delta=f"{val.margin_pct * 100:+.0f}%" if val.margin_pct is not None else None,
             )
-        m3.metric("Vergleichsinserate", val.sample_size)
+        st.metric("Vergleichsinserate", val.sample_size)
         st.caption(
             "Marktwert = Median vergleichbarer Inserate (gleiches Modell, ähnlicher "
             "km-Stand & Baujahr). Marge = Marktwert − Kaufpreis."
@@ -132,7 +132,7 @@ def render_detail(scored: ScoredListing) -> None:
     render_breakdown_table(scored)
 
     if car.model_risk_notes:
-        with st.expander("🔍 Modell-Risiko Bewertung (Gemini)"):
+        with st.expander("Modell-Risiko Bewertung (Gemini)"):
             score_pct = f"{car.model_risk_score * 100:.0f} %" if car.model_risk_score is not None else "–"
             st.caption(f"Modell-Risiko Score: {score_pct} (100 % = geringstes Risiko)")
             st.write(car.model_risk_notes)
