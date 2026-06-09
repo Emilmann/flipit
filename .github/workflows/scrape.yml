@@ -1,0 +1,31 @@
+name: Auto-Scrape
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # alle 6 Stunden
+  workflow_dispatch:         # manueller Start über GitHub UI
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Abhängigkeiten installieren
+        run: pip install -r requirements.txt
+
+      - name: Inserate scrapen und in Supabase speichern
+        run: python scripts/scrape.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+          SEARCH_MODELS: ${{ vars.SEARCH_MODELS || 'Audi A3, VW Golf, BMW 3er' }}
+          PRICE_MIN: ${{ vars.PRICE_MIN || '6000' }}
+          PRICE_MAX: ${{ vars.PRICE_MAX || '8000' }}

@@ -17,7 +17,7 @@ import streamlit as st
 
 from flipit import __version__
 from flipit.core.config import settings
-from flipit.processing import ListingRepository, RiskScorer
+from flipit.processing import create_repository, RiskScorer
 from flipit.ui.dashboard import render_detail, render_overview
 from flipit.ui.data import (
     SORT_OPTIONS,
@@ -44,7 +44,7 @@ def main() -> None:
     st.title(f"🚗 {settings.app_title}")
     st.caption(f"Kfz-Analyse für den österreichischen Markt · v{__version__}")
 
-    repo = ListingRepository(config=settings)
+    repo = create_repository(settings)
     scored = load_scored_listings(repo, RiskScorer())
 
     with st.sidebar:

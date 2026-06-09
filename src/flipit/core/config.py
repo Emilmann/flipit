@@ -80,6 +80,10 @@ class Settings:
     google_api_key: str             # Google API Key: Gemini LLM + Custom Search (MVP-8/9)
     google_cse_id: str              # Google Custom Search Engine ID (MVP-9)
 
+    # --- Supabase (Cloud-Persistenz) ---
+    supabase_url: str               # Supabase Project URL (leer → SQLite-Fallback)
+    supabase_key: str               # Supabase service_role Key
+
 
 def load_settings() -> Settings:
     """Baut die Settings aus Umgebungsvariablen (mit Defaults)."""
@@ -106,6 +110,8 @@ def load_settings() -> Settings:
         ),
         google_api_key=os.getenv("GOOGLE_API_KEY", ""),
         google_cse_id=os.getenv("GOOGLE_CSE_ID", ""),
+        supabase_url=os.getenv("SUPABASE_URL", ""),
+        supabase_key=os.getenv("SUPABASE_KEY", ""),
     )
 
 

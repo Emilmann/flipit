@@ -16,7 +16,7 @@ from flipit.processing.scoring import (
     ScoreResult,
     ScoringConfig,
 )
-from flipit.processing.storage import ListingRepository
+from flipit.processing.storage import ListingRepository, create_repository
 from flipit.processing.valuation import (
     MarketValuator,
     ValuationConfig,
@@ -30,6 +30,7 @@ __all__ = [
     "ImageAnalysisConfig",
     "ImageAnalysisResult",
     "ListingRepository",
+    "create_repository",
     "MarketValuator",
     "RiskScorer",
     "ScoreResult",

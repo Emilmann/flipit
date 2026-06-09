@@ -20,7 +20,7 @@ from flipit.processing.extract import parse_detail
 from flipit.processing.image_analysis import analyze_paths
 from flipit.processing.images import download_images
 from flipit.processing.models import CarDetail
-from flipit.processing.storage import ListingRepository
+from flipit.processing.storage import ListingRepository, create_repository
 from flipit.scraper import Listing, WillhabenScraper
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ def run(
 ) -> list[CarDetail]:
     """Vollständiger Lauf: Modelle suchen, Details extrahieren, persistieren."""
     scraper = scraper or WillhabenScraper(config=config)
-    repo = repo or ListingRepository(config=config)
+    repo = repo or create_repository(config)
 
     listings: list[Listing] = scraper.search_all()
     logger.info("%d Inserate aus der Suche – verarbeite Details.", len(listings))
