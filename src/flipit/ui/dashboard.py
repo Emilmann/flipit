@@ -130,6 +130,12 @@ def render_detail(scored: ScoredListing) -> None:
     render_weight_chart(scored)
     render_breakdown_table(scored)
 
+    if car.model_risk_notes:
+        with st.expander("🔍 Modell-Risiko Bewertung (Gemini)"):
+            score_pct = f"{car.model_risk_score * 100:.0f} %" if car.model_risk_score is not None else "–"
+            st.caption(f"Modell-Risiko Score: {score_pct} (100 % = geringstes Risiko)")
+            st.write(car.model_risk_notes)
+
     if car.description:
         with st.expander("Beschreibung"):
             st.write(car.description)

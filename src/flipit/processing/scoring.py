@@ -67,9 +67,10 @@ class ScoringConfig:
     weight_margin: float = 0.30       # Marge zum geschätzten Marktwert (MVP-7)
     weight_price: float = 0.10        # Budget-Headroom (sekundär)
     weight_mileage: float = 0.20
-    weight_age: float = 0.10
+    weight_age: float = 0.05          # reduziert, da model_risk Alter bereits berücksichtigt
     weight_description: float = 0.15
     weight_images: float = 0.15       # Bildqualität/-plausibilität (MVP-6)
+    weight_model_risk: float = 0.15   # Modellspezifisches Risiko (MVP-8)
 
     # Budget-Range (Budget-Headroom): günstiger innerhalb des Budgets = besser
     price_min: int = 6000
@@ -102,9 +103,10 @@ class ScoringConfig:
             weight_margin=_env_float("SCORE_WEIGHT_MARGIN", 0.30),
             weight_price=_env_float("SCORE_WEIGHT_PRICE", 0.10),
             weight_mileage=_env_float("SCORE_WEIGHT_MILEAGE", 0.20),
-            weight_age=_env_float("SCORE_WEIGHT_AGE", 0.10),
+            weight_age=_env_float("SCORE_WEIGHT_AGE", 0.05),
             weight_description=_env_float("SCORE_WEIGHT_DESCRIPTION", 0.15),
             weight_images=_env_float("SCORE_WEIGHT_IMAGES", 0.15),
+            weight_model_risk=_env_float("SCORE_WEIGHT_MODEL_RISK", 0.15),
             price_min=_env_int("PRICE_MIN", 6000),
             price_max=_env_int("PRICE_MAX", 8000),
             margin_best_pct=_env_float("SCORE_MARGIN_BEST_PCT", 0.20),
@@ -128,6 +130,7 @@ class ScoringConfig:
             "age": self.weight_age,
             "description": self.weight_description,
             "images": self.weight_images,
+            "model_risk": self.weight_model_risk,
         }
 
 
@@ -225,6 +228,12 @@ class RiskScorer:
             return None, _NEUTRAL
         return round(car.image_score, 2), _clamp(car.image_score)
 
+    def _score_model_risk(self, car: CarDetail) -> tuple[object, float]:
+        # Modell-Risiko (MVP-8): bereits auf [0, 1] normalisiert; ohne neutral.
+        if car.model_risk_score is None:
+            return None, _NEUTRAL
+        return round(car.model_risk_score, 2), _clamp(car.model_risk_score)
+
     def score(self, car: CarDetail, market_value: float | None = None) -> ScoreResult:
         """Berechnet Gesamt-Score und Breakdown für ein Inserat.
 
@@ -241,6 +250,7 @@ class RiskScorer:
             "age": self._score_age,
             "description": self._score_description,
             "images": self._score_images,
+            "model_risk": self._score_model_risk,
         }
 
         factors: list[FactorScore] = []

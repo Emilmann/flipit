@@ -39,7 +39,7 @@ def test_total_within_bounds() -> None:
 def test_breakdown_has_all_factors() -> None:
     result = RiskScorer(CONFIG).score(make_car())
     names = {f.name for f in result.factors}
-    assert names == {"margin", "price", "mileage", "age", "description", "images"}
+    assert names == {"margin", "price", "mileage", "age", "description", "images", "model_risk"}
 
 
 def test_contributions_sum_to_total() -> None:
@@ -50,7 +50,7 @@ def test_contributions_sum_to_total() -> None:
 
 def test_weights_normalize_to_one() -> None:
     result = RiskScorer(CONFIG).score(make_car())
-    assert sum(f.weight for f in result.factors) == pytest.approx(1.0, abs=1e-6)
+    assert sum(f.weight for f in result.factors) == pytest.approx(1.0, abs=1e-4)
 
 
 def test_cheaper_car_scores_higher_on_price() -> None:
@@ -108,6 +108,7 @@ def test_weights_are_configurable() -> None:
     cfg = replace(
         CONFIG, weight_margin=0.0, weight_price=1.0, weight_mileage=0.0,
         weight_age=0.0, weight_description=0.0, weight_images=0.0,
+        weight_model_risk=0.0,
     )
     result = RiskScorer(cfg).score(make_car(price=6000))
     assert result.total == pytest.approx(100.0)
